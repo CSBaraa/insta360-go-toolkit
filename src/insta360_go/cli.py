@@ -162,6 +162,10 @@ async def cmd_buttons(args) -> int:
 async def cmd_clock(args) -> int:
     cam = await _open(args.address)
     try:
+        if args.dry_run:
+            print("  would set the camera clock from this computer")
+            print("  dry run, nothing sent")
+            return 0
         await set_clock(cam)
         print("  clock set. New recordings will carry today's date.")
         print("  (this firmware does not read the clock back, so the filename\n"
@@ -240,6 +244,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_buttons, is_async=True)
 
     s = sub.add_parser("clock", help="set the camera clock from this computer")
+    s.add_argument("-n", "--dry-run", action="store_true")
     s.set_defaults(func=cmd_clock, is_async=True)
 
     s = sub.add_parser("get", help="read a raw option by number")

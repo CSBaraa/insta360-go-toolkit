@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Control an Insta360 GO (1st gen) and export its footage, without the discontinued phone app"
 readme = "README.md"
 requires-python = ">=3.9"
+authors = [{ name = "Baraa Fadhloun" }]
 license = { text = "MIT" }
 keywords = ["insta360", "insta360 go", "action camera", "bluetooth", "ble", "reverse engineering"]
 classifiers = [

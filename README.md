@@ -70,6 +70,26 @@ go1 export                  # browse and export footage in a browser
 
 Add `-n` / `--dry-run` to any write to see what it would send.
 
+## What it touches
+
+Nothing is written to your camera unless you run a command that says so.
+Installing, importing, `scan`, `info`, `get` and `export` never modify it.
+
+| Command | Camera |
+|---|---|
+| `scan` `info` `get` `export` | read-only |
+| `duration` (no value) `buttons` (no args) | read-only |
+| `duration 60` `buttons btn=mode` `clock` `set` | writes — all support `-n` / `--dry-run` |
+
+Only settings are implemented. There is no firmware-flashing path and no file
+deletion, and a 20-second button hold factory-resets the camera if you want out.
+
+**You do not need the Insta360 app or its APK to use this.** The values needed
+to talk to the camera are ordinary constants in `constants.py`, and the only
+runtime dependency is `bleak`. The APK is used solely by the optional
+`tools/extract_protocol.py`, if you want to regenerate the full 74-descriptor
+schema or explore commands this toolkit does not implement.
+
 ## Verify recording changes against real footage
 
 This camera returns `200 OK` for settings it then ignores. `Options.capture_time_limit`
@@ -127,6 +147,6 @@ length and button mapping to defaults — a way out if you get something wrong.
 ## Credits
 
 Protocol reverse-engineered and verified against hardware by
-<!-- add yourself here --> the contributors.
+**Baraa Fadhloun**, on a GO 1 running firmware v0.4.9.5.
 
 MIT licensed.
