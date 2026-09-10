@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Insta360 GO Studio</title>
+<style>
+ :root{--bg:#0f1115;--panel:#171a21;--panel2:#1e222b;--line:#2a2f3a;--fg:#e8eaf0;
+       --dim:#9aa2b2;--accent:#ffc531;--ink:#231a00;--ok:#4ec98a;--err:#ff6b6b}
+ @media (prefers-color-scheme:light){:root{--bg:#f5f6f8;--panel:#fff;--panel2:#eef0f4;
+       --line:#dcdfe6;--fg:#14161a;--dim:#666e7d;--accent:#f0a500;--ink:#241900}}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,
+      BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;min-height:100vh}
+ .main{flex:1;min-width:0;padding-bottom:92px}
+ header{padding:20px 22px 10px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+ h1{font-size:18px;margin:0;letter-spacing:-.01em}
+ .sub{color:var(--dim);font-size:12.5px}
+ .bar{padding:0 22px 14px;display:flex;gap:8px;flex-wrap:wrap}
+ button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);
+        padding:6px 12px;border-radius:8px;cursor:pointer}
+ button:hover{background:var(--panel2)}
+ button.primary{background:var(--accent);color:var(--ink);border-color:transparent;font-weight:600}
+ button.primary:disabled{opacity:.4;cursor:not-allowed}
+ .grid{display:grid;gap:13px;padding:0 22px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+ .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+ .card.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+ .thumbwrap{position:relative;aspect-ratio:1;background:#000;cursor:pointer;overflow:hidden}
+ .thumbwrap img{width:100%;height:100%;object-fit:cover;display:block}
+ .cropbox{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(0,0,0,.55);
+          pointer-events:none;border-radius:2px}
+ .play{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;color:#fff;
+       text-shadow:0 2px 12px #000b;opacity:.9;pointer-events:none}
+ .dur{position:absolute;right:7px;bottom:7px;background:#000b;color:#fff;font-size:11px;
+      padding:2px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
+ .tick{position:absolute;left:7px;top:7px;width:22px;height:22px;border-radius:6px;
+       background:#0009;border:1.5px solid #fff9;display:grid;place-items:center;color:#fff;
+       font-size:13px;z-index:3;cursor:pointer}
+ .card.sel .tick{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+ .meta{padding:9px 11px;font-size:12px}
+ .fn{font-weight:600;word-break:break-all;font-size:11.5px;margin-bottom:2px}
+ .dimtext{color:var(--dim)}
+ .prog{height:3px;background:var(--panel2);border-radius:2px;margin-top:7px;overflow:hidden}
+ .prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+ .badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:20px;
+        border:1px solid var(--line);color:var(--dim);margin-top:6px}
+ .badge.done{color:var(--ok);border-color:var(--ok)}
+ .badge.err{color:var(--err);border-color:var(--err)}
+ .badge.work{color:var(--accent);border-color:var(--accent)}
+
+ aside{width:310px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+       padding:18px 18px 100px;overflow-y:auto;height:100vh;position:sticky;top:0}
+ aside h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);
+          margin:22px 0 9px}
+ aside h2:first-child{margin-top:0}
+ .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0}
+ .row label{color:var(--dim);font-size:12.5px;flex:none}
+ select,input[type=number]{font:inherit;font-size:12.5px;background:var(--panel2);color:var(--fg);
+        border:1px solid var(--line);border-radius:7px;padding:5px 7px;min-width:120px}
+ input[type=range]{width:130px;accent-color:var(--accent)}
+ .val{font-variant-numeric:tabular-nums;color:var(--fg);font-size:12px;min-width:38px;text-align:right}
+ .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+ .seg button{border:none;border-radius:0;padding:6px 9px;font-size:12px;flex:1;background:var(--panel2)}
+ .seg button.on{background:var(--accent);color:var(--ink);font-weight:600}
+ .hint{color:var(--dim);font-size:11.5px;line-height:1.45;margin:8px 0 0}
+ .disabled{opacity:.4;pointer-events:none}
+ footer{position:fixed;left:0;right:310px;bottom:0;background:var(--panel);
+        border-top:1px solid var(--line);padding:12px 22px;display:flex;gap:12px;
+        align-items:center;flex-wrap:wrap}
+ .empty{padding:60px 22px;text-align:center;color:var(--dim)}
+ dialog{border:none;border-radius:14px;padding:0;background:#000;max-width:92vw}
+ dialog::backdrop{background:#000b}
+ dialog video,dialog img{display:block;max-width:86vw;max-height:78vh}
+ @media(max-width:900px){body{flex-direction:column}aside{width:auto;height:auto;position:static;
+        border-left:none;border-top:1px solid var(--line)}footer{right:0}}
+</style></head><body>
+
+<div class="main">
+ <header><h1>Insta360 GO Studio</h1><span class="sub" id="src">scanning…</span></header>
+ <div class="bar">
+  <button onclick="selAll(true)">Select all</button>
+  <button onclick="selAll(false)">Clear</button>
+  <button onclick="load()">Rescan</button>
+  <button onclick="fetch('/api/reveal')">Open folder</button>
+  <button onclick="previewSettings()">Preview settings ▶</button>
+ </div>
+ <div class="grid" id="grid"></div>
+ <div class="empty" id="empty" hidden>No camera media found.<br>
+   Plug the GO into its charge case, connect it, then hit Rescan.</div>
+</div>
+
+<aside>
+ <h2>Export mode</h2>
+ <div class="seg" id="mode">
+   <button data-v="copy" onclick="setMode('copy')">Passthrough</button>
+   <button data-v="encode" onclick="setMode('encode')">Custom export</button>
+ </div>
+ <p class="hint" id="modehint"></p>
+
+ <div id="opts">
+  <h2>Reframe</h2>
+  <div class="row"><label>Aspect</label>
+    <select id="aspect" onchange="upd()">
+      <option value="16:9">16:9 landscape</option>
+      <option value="9:16">9:16 vertical</option>
+      <option value="1:1">1:1 square</option>
+      <option value="4:3">4:3</option>
+      <option value="21:9">21:9 cinematic</option>
+      <option value="source">Source (uncropped)</option>
+    </select></div>
+  <div class="row"><label>Zoom</label>
+    <input type="range" id="zoom" min="100" max="250" value="100" oninput="upd()">
+    <span class="val" id="zoomv">1.0×</span></div>
+  <div class="row"><label>Pan ↔</label>
+    <input type="range" id="panx" min="-100" max="100" value="0" oninput="upd()">
+    <span class="val" id="panxv">0</span></div>
+  <div class="row"><label>Pan ↕</label>
+    <input type="range" id="pany" min="-100" max="100" value="0" oninput="upd()">
+    <span class="val" id="panyv">0</span></div>
+  <p class="hint">The GO shoots a square 2720×2720 frame. Cropping is how you pick
+    the shot — nothing is upscaled until zoom goes past ~1.5×.</p>
+
+  <h2>Stabilize &amp; level</h2>
+  <div class="row"><label>Stabilization</label>
+    <select id="stab" onchange="upd()">
+      <option value="off">Off</option>
+      <option value="fast">Fast (1 pass)</option>
+      <option value="best">Best (2 pass)</option>
+    </select></div>
+  <div class="row"><label>Horizon</label>
+    <input type="range" id="rotate" min="-150" max="150" value="0" oninput="upd()">
+    <span class="val" id="rotatev">0°</span></div>
+  <div class="row"><label>De-fisheye</label>
+    <input type="range" id="defish" min="0" max="100" value="0" oninput="upd()">
+    <span class="val" id="defishv">0</span></div>
+  <p class="hint">This is ffmpeg's optical stabilizer, not Insta360's FlowState —
+    FlowState uses gyro data only their software reads. Add a little Zoom when
+    leveling the horizon, or you'll see black corners.</p>
+
+  <h2>Output</h2>
+  <div class="row"><label>Resolution</label>
+    <select id="res" onchange="upd()">
+      <option value="source">Source</option>
+      <option value="2160">4K (2160)</option>
+      <option value="1440">1440</option>
+      <option value="1080" selected>1080</option>
+      <option value="720">720</option>
+    </select></div>
+  <div class="row"><label>Frame rate</label>
+    <select id="fps" onchange="upd()">
+      <option value="source">Source</option>
+      <option value="60">60</option><option value="30">30</option>
+      <option value="25">25</option><option value="24">24</option>
+    </select></div>
+  <div class="row"><label>Speed</label>
+    <input type="range" id="speed" min="25" max="400" value="100" step="5" oninput="upd()">
+    <span class="val" id="speedv">1.0×</span></div>
+  <div class="row"><label>Codec</label>
+    <select id="codec" onchange="upd()">
+      <option value="h264_hw">H.264 (hardware, fast)</option>
+      <option value="h264_x264">H.264 (x264, best)</option>
+      <option value="h265_hw">H.265 (smaller files)</option>
+    </select></div>
+  <div class="row"><label>Quality</label>
+    <select id="quality" onchange="upd()">
+      <option value="high">High</option><option value="medium">Medium</option>
+      <option value="small">Small file</option>
+    </select></div>
+
+  <h2>Color</h2>
+  <div class="row"><label>Brightness</label>
+    <input type="range" id="bright" min="-50" max="50" value="0" oninput="upd()">
+    <span class="val" id="brightv">0</span></div>
+  <div class="row"><label>Contrast</label>
+    <input type="range" id="contrast" min="50" max="200" value="100" oninput="upd()">
+    <span class="val" id="contrastv">100</span></div>
+  <div class="row"><label>Saturation</label>
+    <input type="range" id="sat" min="0" max="200" value="100" oninput="upd()">
+    <span class="val" id="satv">100</span></div>
+  <div class="row"><label>Sharpen</label>
+    <input type="range" id="sharpen" min="0" max="100" value="0" oninput="upd()">
+    <span class="val" id="sharpenv">0</span></div>
+  <div class="row"><label></label><button onclick="vivid()">Vivid preset</button></div>
+
+  <h2>Trim</h2>
+  <div class="row"><label>Start (s)</label>
+    <input type="number" id="trimStart" min="0" step="0.1" placeholder="0" oninput="upd()"></div>
+  <div class="row"><label>End (s)</label>
+    <input type="number" id="trimEnd" min="0" step="0.1" placeholder="end" oninput="upd()"></div>
+  <p class="hint">Applies to every selected clip. Leave blank for the whole clip.</p>
+ </div>
+
+ <h2>Files</h2>
+ <div class="row"><label>Keep original .insv</label>
+   <input type="checkbox" id="keepOriginal" checked onchange="upd()"></div>
+ <p class="hint">Keep this on if you might ever want Insta360 Studio's FlowState
+   stabilization — it can only read the original .insv.</p>
+ <div class="row"><label></label><button onclick="resetAll()">Reset to defaults</button></div>
+</aside>
+
+<footer>
+ <button class="primary" id="go" disabled onclick="doExport()">Export</button>
+ <button id="cancel" hidden onclick="fetch('/api/cancel',{method:'POST'})">Cancel</button>
+ <span class="sub" id="status"></span>
+</footer>
+
+<dialog id="dlg" onclick="closeDlg(event)"><div id="dlgbody"></div></dialog>
+
+<script>
+let clips=[], sel=new Set(), polling=null, S={};
+const ASPECTS={"16:9":16/9,"9:16":9/16,"1:1":1,"4:3":4/3,"21:9":21/9};
+const $=id=>document.getElementById(id);
+const fmtSize=b=>b>1073741824?(b/1073741824).toFixed(1)+' GB':b>1048576?Math.round(b/1048576)+' MB':Math.round(b/1024)+' KB';
+const fmtDur=s=>s==null?'':Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+
+function readUI(){
+  S={ mode:S.mode||'copy',
+      aspect:$('aspect').value, zoom:+$('zoom').value/100,
+      panx:+$('panx').value/100, pany:+$('pany').value/100,
+      rotate:+$('rotate').value/10, defish:+$('defish').value,
+      stab:$('stab').value, res:$('res').value, fps:$('fps').value,
+      speed:+$('speed').value/100, codec:$('codec').value, quality:$('quality').value,
+      bright:+$('bright').value, contrast:+$('contrast').value,
+      sat:+$('sat').value, sharpen:+$('sharpen').value,
+      trimStart:$('trimStart').value===''?null:+$('trimStart').value,
+      trimEnd:$('trimEnd').value===''?null:+$('trimEnd').value,
+      keepOriginal:$('keepOriginal').checked };
+  $('zoomv').textContent=S.zoom.toFixed(2)+'×';
+  $('panxv').textContent=$('panx').value;
+  $('panyv').textContent=$('pany').value;
+  $('rotatev').textContent=S.rotate.toFixed(1)+'°';
+  $('defishv').textContent=S.defish;
+  $('speedv').textContent=S.speed.toFixed(2)+'×';
+  ['bright','contrast','sat','sharpen'].forEach(k=>$(k+'v').textContent=$(k).value);
+  localStorage.setItem('goSettings',JSON.stringify(S));
+}
+function upd(){ readUI(); render(); }
+
+function setMode(m){
+  S.mode=m;
+  [...$('mode').children].forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  $('opts').classList.toggle('disabled',m==='copy');
+  $('modehint').textContent = m==='copy'
+    ? 'Straight copy into an .mp4 container. Instant, zero quality loss, keeps the square 2720×2720 frame.'
+    : 'Re-encodes with the options below. Slower, but this is where reframing, stabilization and color happen.';
+  upd();
+}
+function vivid(){ $('contrast').value=112; $('sat').value=125; $('sharpen').value=35; upd(); }
+function resetAll(){ localStorage.removeItem('goSettings'); location.reload(); }
+
+// crop rectangle as % of the source frame - mirrors crop_rect() in Python
+function cropPct(k){
+  if(S.mode==='copy'||S.aspect==='source') return null;
+  const w=k.width||2720, h=k.height||2720, a=ASPECTS[S.aspect], z=Math.max(1,S.zoom);
+  let cw,ch;
+  if(w/h>=a){ ch=h; cw=h*a; } else { cw=w; ch=w/a; }
+  cw=Math.min(cw/z,w); ch=Math.min(ch/z,h);
+  const x=(w-cw)/2+S.panx*(w-cw)/2, y=(h-ch)/2+S.pany*(h-ch)/2;
+  return {w:cw/w*100,h:ch/h*100,x:x/w*100,y:y/h*100};
+}
+
+async function load(){
+  const d=await (await fetch('/api/clips')).json();
+  clips=d.clips;
+  $('src').textContent = d.roots.length
+    ? clips.length+' items on '+d.roots.map(p=>p.split('/')[2]).join(', ')+'  →  '+d.outDir
+    : 'no camera detected';
+  $('empty').hidden = clips.length>0;
+  render();
+}
+
+function render(){
+  const g=$('grid');
+  g.innerHTML='';
+  for(const k of clips){
+    const c=cropPct(k);
+    const el=document.createElement('div');
+    el.className='card'+(sel.has(k.name)?' sel':'');
+    const dims=k.width?k.width+'×'+k.height:'';
+    const when=new Date(k.mtime*1000).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    el.innerHTML=`
+      <div class="thumbwrap" onclick="preview('${encodeURIComponent(k.name)}','${k.kind}')">
+        <img loading="lazy" src="/thumb?name=${encodeURIComponent(k.name)}" alt="">
+        ${c&&k.kind==='video'?`<div class="cropbox" style="left:${c.x}%;top:${c.y}%;width:${c.w}%;height:${c.h}%"></div>`:''}
+        ${k.kind==='video'?'<div class="play">▶</div>':''}
+        ${k.duration?`<div class="dur">${fmtDur(k.duration)}</div>`:''}
+      </div>
+      <div class="tick" onclick="toggle(event,'${k.name.replace(/'/g,"\\'")}')">${sel.has(k.name)?'✓':''}</div>
+      <div class="meta">
+        <div class="fn">${k.name}</div>
+        <div class="dimtext">${fmtSize(k.size)}${dims?' · '+dims:''}${k.fps?' · '+k.fps+'fps':''}</div>
+        <div class="dimtext">${when}</div>
+        <div class="badge ${k.imported?'done':''}" id="b-${CSS.escape(k.name)}">${k.imported?'already exported':'on camera'}</div>
+        <div class="prog"><i id="p-${CSS.escape(k.name)}"></i></div>
+      </div>`;
+    g.appendChild(el);
+  }
+  $('go').disabled=sel.size===0;
+  $('go').textContent=sel.size?`Export ${sel.size} item${sel.size>1?'s':''}`:'Export';
+}
+
+function toggle(e,n){ e.stopPropagation(); sel.has(n)?sel.delete(n):sel.add(n); render(); }
+function selAll(on){ sel=on?new Set(clips.map(c=>c.name)):new Set(); render(); }
+
+function preview(n,kind){
+  $('dlgbody').innerHTML = kind==='photo'
+    ? `<img src="/stream?name=${n}">`
+    : `<video src="/stream?name=${n}" controls autoplay playsinline></video>`;
+  $('dlg').showModal();
+}
+function previewSettings(){
+  const n=[...sel][0]||(clips[0]&&clips[0].name);
+  if(!n){ alert('No clips found.'); return; }
+  if(S.mode==='copy'){ alert('Switch to Custom export to preview settings.'); return; }
+  $('dlgbody').innerHTML='<div style="padding:40px;color:#aaa;font:14px sans-serif">Rendering 3s sample…</div>';
+  $('dlg').showModal();
+  const url='/preview?name='+encodeURIComponent(n)+'&s='+encodeURIComponent(JSON.stringify(S));
+  const v=document.createElement('video');
+  v.src=url; v.controls=true; v.autoplay=true; v.loop=true; v.playsInline=true;
+  v.onloadeddata=()=>{ $('dlgbody').innerHTML=''; $('dlgbody').appendChild(v); };
+  v.onerror=()=>{ $('dlgbody').innerHTML='<div style="padding:40px;color:#ff6b6b;font:14px sans-serif">Preview failed — check the server log.</div>'; };
+}
+function closeDlg(e){ if(e.target.id==='dlg'){ $('dlgbody').innerHTML=''; $('dlg').close(); } }
+
+async function doExport(){
+  await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({names:[...sel],settings:S})});
+  $('status').textContent='working…'; $('cancel').hidden=false; $('go').disabled=true;
+  if(polling) clearInterval(polling);
+  polling=setInterval(poll,600);
+}
+
+async function poll(){
+  const jobs=await (await fetch('/api/jobs')).json();
+  let active=0,done=0,err=0;
+  for(const [name,j] of Object.entries(jobs)){
+    const b=$('b-'+CSS.escape(name)), p=$('p-'+CSS.escape(name));
+    if(b){ b.textContent=j.msg; b.className='badge '+(j.state==='done'?'done':j.state==='error'?'err':'work'); }
+    if(p) p.style.width=(j.state==='done'?100:j.pct)+'%';
+    if(j.state==='done') done++; else if(j.state==='error') err++; else active++;
+  }
+  $('status').textContent = active ? `${done} done, ${active} to go…`
+                                   : `${done} exported${err?', '+err+' failed':''}`;
+  if(!active){ clearInterval(polling); polling=null; $('cancel').hidden=true; load(); }
+}
+
+const saved=localStorage.getItem('goSettings');
+if(saved){ try{
+  const v=JSON.parse(saved);
+  $('aspect').value=v.aspect; $('zoom').value=v.zoom*100;
+  $('panx').value=v.panx*100; $('pany').value=v.pany*100;
+  $('rotate').value=v.rotate*10; $('defish').value=v.defish;
+  $('stab').value=v.stab; $('res').value=v.res; $('fps').value=v.fps;
+  $('speed').value=v.speed*100; $('codec').value=v.codec; $('quality').value=v.quality;
+  $('bright').value=v.bright; $('contrast').value=v.contrast;
+  $('sat').value=v.sat; $('sharpen').value=v.sharpen;
+  if(v.trimStart!=null)$('trimStart').value=v.trimStart;
+  if(v.trimEnd!=null)$('trimEnd').value=v.trimEnd;
+  $('keepOriginal').checked=v.keepOriginal; S.mode=v.mode;
+}catch(e){} }
+setMode(S.mode||'copy');
+load();
+</script></body></html>
