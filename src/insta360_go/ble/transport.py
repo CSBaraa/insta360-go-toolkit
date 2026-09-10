@@ -56,14 +56,24 @@ class Camera:
         self.name = name
         self._client = None
         self._rx = Reassembler()
-        self._replies: asyncio.Queue = asyncio.Queue()
-        self._lock = asyncio.Lock()
+        # Built lazily: on Python 3.9 an asyncio primitive binds to the loop
+        # that exists when it is constructed, so building these in __init__
+        # breaks any caller that creates a Camera before entering the loop.
+        self._replies: asyncio.Queue | None = None
+        self._lock: asyncio.Lock | None = None
         self._seq = 0
+
+    def _ensure_primitives(self) -> None:
+        if self._replies is None:
+            self._replies = asyncio.Queue()
+        if self._lock is None:
+            self._lock = asyncio.Lock()
 
     # ------------------------------------------------------------- lifecycle
     async def connect(self, timeout: float = 25.0) -> Camera:
         from bleak import BleakClient
 
+        self._ensure_primitives()
         client = BleakClient(self.address, timeout=timeout)
         await client.connect()
         await client.start_notify(CHAR_NOTIFY, self._on_notify)
@@ -89,6 +99,8 @@ class Camera:
 
     # ---------------------------------------------------------------- io
     def _on_notify(self, _handle, data: bytearray) -> None:
+        if self._replies is None:
+            return
         reply = self._rx.feed(bytes(data))
         while reply is not None:
             self._replies.put_nowait(reply)
@@ -108,6 +120,7 @@ class Camera:
         """
         if not self.connected:
             raise NotConnected("not connected to the camera")
+        self._ensure_primitives()
         async with self._lock:
             while not self._replies.empty():        # drop anything stale
                 self._replies.get_nowait()

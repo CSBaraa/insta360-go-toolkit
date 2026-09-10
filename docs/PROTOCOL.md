@@ -10,8 +10,8 @@ is untested it says so.
 
 ## Transport
 
-The camera advertises as `GO <serial-suffix>` — e.g. serial `IGS3519NV55BQP`
-advertises as `GO V55BQP` — with service UUID `0000be80`.
+The camera advertises as `GO <serial-suffix>` — e.g. serial `IGS0000XXXXXXX`
+advertises as `GO XXXXXX` — with service UUID `0000be80`.
 
 | | UUID | Direction |
 |---|---|---|

@@ -19,10 +19,10 @@ computer, over Bluetooth, without the phone app.
 
 ```console
 $ go1 scan
-  3737F9DB-774B-1ECA-E8D2-CF2757C71DC9  GO V55BQP  -47dBm
+  AABBCCDD-1111-2222-3333-444455556666  GO XXXXXX  -47dBm
 
 $ go1 info
-  serial             IGS3519NV55BQP
+  serial             IGS0000XXXXXXX
   firmware           v0.4.9.5
   model              Insta360 Go
   record_duration    15
@@ -46,8 +46,12 @@ other way back.
 Needs Python 3.9+, and `ffmpeg` for the export side.
 
 ```bash
-pip install insta360-go-toolkit
+git clone https://github.com/CSBaraa/insta360-go-toolkit
+cd insta360-go-toolkit
+pip install -e .
 ```
+
+(Not on PyPI yet.)
 
 **macOS:** run from a terminal that has Bluetooth permission (System Settings →
 Privacy & Security → Bluetooth). A process without it is killed the moment it
@@ -134,15 +138,6 @@ If your GO 1 behaves differently, please
 [open a camera report](../../issues/new?template=camera-report.md). Reports of
 settings that are accepted but ignored are especially valuable — that is exactly
 how the `capture_time_limit` decoy was found.
-
-## Safety
-
-Only settings commands are implemented. There is no firmware-flashing path and
-no file deletion. Writes are verified by reading back, and options known to be
-ignored are flagged before you write them.
-
-A 20-second button hold factory-resets the camera, which restores recording
-length and button mapping to defaults — a way out if you get something wrong.
 
 ## Credits
 

@@ -28,12 +28,15 @@ protocol = ["protobuf>=4"]   # only for tools/extract_protocol.py
 go1 = "insta360_go.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/OWNER/insta360-go-toolkit"
-Issues = "https://github.com/OWNER/insta360-go-toolkit/issues"
-Protocol = "https://github.com/OWNER/insta360-go-toolkit/blob/main/docs/PROTOCOL.md"
+Homepage = "https://github.com/CSBaraa/insta360-go-toolkit"
+Issues = "https://github.com/CSBaraa/insta360-go-toolkit/issues"
+Protocol = "https://github.com/CSBaraa/insta360-go-toolkit/blob/main/docs/PROTOCOL.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+insta360_go = ["media/*.html"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

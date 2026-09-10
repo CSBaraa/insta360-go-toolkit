@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -24,7 +25,7 @@ from .export import (
 )
 
 OUT_DIR = Path.home() / "Desktop" / "insta360-go"
-CACHE = Path(__import__("os").environ.get("TMPDIR", "/tmp")) / "insta360-go-cache"
+CACHE = Path(os.environ.get("TMPDIR", "/tmp")) / "insta360-go-cache"
 PAGE = (Path(__file__).parent / "page.html").read_text()
 
 _jobs: dict[str, dict] = {}
@@ -117,8 +118,12 @@ def export_clip(name: str, s: Settings) -> None:
         base = 5.0
         if s.stab == "best":
             trf = str(_cache_name(name, ".trf"))
-            pre = video_filters(clip, Settings(**{**s.__dict__, "stab": "off",
-                                                  "aspect": "source", "res": "source"}))
+            # Analyse the untouched frame: speed, colour and cropping would
+            # skew motion detection or waste time before it.
+            pre = video_filters(clip, Settings(
+                **{**s.__dict__, "stab": "off", "aspect": "source", "res": "source",
+                   "speed": 1.0, "bright": 0, "contrast": 100, "sat": 100,
+                   "sharpen": 0, "rotate": 0.0, "defish": 0, "fps": "source"}))
             detect = (pre + "," if pre else "") + \
                 f"vidstabdetect=shakiness=8:accuracy=15:result={trf}"
             _set_job(name, "working", "analyzing motion (1/2)", 5)
